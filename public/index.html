@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>靈晶祝福｜AI 水晶能量推薦</title>
+  <meta name="description" content="結合命理與 AI 智慧，根據您的生辰推薦最適合的水晶串珠與神明加持，為您增加靈氣能量，獲得滿滿祝福。" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+
+<nav>
+  <a href="/" class="nav-logo">✨ 靈晶祝福</a>
+  <div class="nav-links">
+    <a href="/">祝福首頁</a>
+    <a href="/crystals.html">水晶百科</a>
+    <a href="#" id="nav-search-order">🔍 查詢訂單</a>
+    <button id="cart-btn" class="cart-nav-btn" title="購物車">
+      🛒
+      <span id="cart-badge" class="cart-badge" style="display:none;">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">✦ AI 能量分析 × 水晶靈氣 × 神明加持</div>
+    <h1>靈晶祝福</h1>
+    <p>結合命理智慧與 AI 能量分析<br/>為您找到專屬守護水晶，增加靈氣能量、獲得祝福</p>
+    
+    <!-- 水晶星球 -->
+    <div class="planet-system-wrap">
+      <div id="planet-system" class="planet-system"></div>
+    </div>
+  </section>
+
+  <!-- Form -->
+  <section class="form-section">
+    <div class="container">
+      <h2 class="section-title">🔮 祈願祝福</h2>
+      <p class="section-sub">填寫您的資訊，AI 將分析您的專屬能量並推薦祈願水晶</p>
+
+      <div class="glass-card">
+        <form id="reading-form">
+          <div class="form-grid">
+
+            <!-- 祈願項目 -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="demand-select">🎯 祈願項目 <span class="required">*</span></label>
+              <select id="demand-select" required>
+                <option value="">請選擇祈願項目</option>
+                <option value="感情與桃花">感情與桃花</option>
+                <option value="事業與職場">事業與職場</option>
+                <option value="健康與平安">健康與平安</option>
+                <option value="招財與偏財">招財與偏財</option>
+                <option value="學業與考試">學業與考試</option>
+                <option value="人際與貴人">人際與貴人</option>
+                <option value="other">其他 (自行填寫)</option>
+              </select>
+              <input id="demand" name="demand" type="text" placeholder="請輸入您的祈願項目" style="display:none; margin-top:0.5rem;" />
+            </div>
+
+            <!-- 姓名 -->
+            <div class="form-group">
+              <label for="name">👤 姓名 <span class="required">*</span></label>
+              <input id="name" name="name" type="text" placeholder="請輸入姓名" required />
+            </div>
+
+            <!-- 性別 -->
+            <div class="form-group">
+              <label>⚧ 性別 <span class="required">*</span></label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="gender" value="male" required /> 男
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="gender" value="female" /> 女
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="gender" value="other" /> 其他
+                </label>
+              </div>
+            </div>
+
+            <!-- 出生日期 -->
+            <div class="form-group">
+              <label for="birthdate">📅 出生日期 <span class="required">*</span></label>
+              <input id="birthdate" name="birthdate" type="date" required />
+            </div>
+
+            <!-- 出生時間 -->
+            <div class="form-group">
+              <label for="birthtime">🕐 出生時間 <span class="optional">選填</span></label>
+              <input id="birthtime" name="birthtime" type="time" placeholder="不知道可不填" />
+            </div>
+
+            <!-- 宗教信仰 -->
+            <div class="form-group">
+              <label for="religion">🙏 宗教信仰 <span class="optional">選填</span></label>
+              <select id="religion" name="religion">
+                <option value="">不填 / 無特定</option>
+                <option value="佛教">🪷 佛教</option>
+                <option value="道教">☯️ 道教</option>
+                <option value="民間信仰">🏮 民間信仰（媽祖、土地公等）</option>
+                <option value="基督教">✝️ 基督教</option>
+                <option value="天主教">⛪ 天主教</option>
+                <option value="伊斯蘭教">☪️ 伊斯蘭教</option>
+              </select>
+            </div>
+
+            <!-- 手圍 -->
+            <div class="form-group">
+              <label for="wrist-size">📏 手圍（cm）<span class="optional">選填</span></label>
+              <input id="wrist-size" name="wrist_size" type="number" step="0.5" min="10" max="30" placeholder="例：15.5" />
+            </div>
+
+            <!-- 聯絡方式 -->
+            <div class="form-group">
+              <label for="phone">📱 手機 / LINE <span class="optional">選填</span></label>
+              <input id="phone" name="phone" type="tel" placeholder="方便聯絡的電話或 LINE ID" />
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email">📧 Email <span class="optional">選填</span></label>
+              <input id="email" name="email" type="email" placeholder="填寫可收到結果通知" />
+            </div>
+
+          </div>
+
+          <!-- 水晶選配 -->
+          <div style="margin-top:1.5rem;">
+            <label style="display:block;margin-bottom:.75rem;font-size:.85rem;color:var(--text-muted);">
+              💎 有興趣的水晶 <span class="optional">可複選</span>
+            </label>
+            <div id="crystal-picks" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;"></div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submit-btn">
+            ✨ 獲取專屬水晶祝福
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section id="result-section">
+    <div class="container">
+      <h2 class="section-title">📜 您的能量報告</h2>
+
+      <div class="result-tabs">
+        <button class="tab-btn active" data-tab="analysis">🔯 能量分析</button>
+        <button class="tab-btn" data-tab="crystals">💎 水晶推薦</button>
+        <button class="tab-btn" data-tab="deities">🙏 神明加持</button>
+      </div>
+
+      <div class="glass-card">
+        <div id="tab-analysis" class="tab-panel active">
+          <div id="result-analysis" class="result-text"></div>
+        </div>
+        <div id="tab-crystals" class="tab-panel">
+          <div id="result-crystals" class="result-text"></div>
+        </div>
+        <div id="tab-deities" class="tab-panel">
+          <div id="result-deities" class="result-text"></div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:1.5rem;">
+        <button id="btn-redo" style="background:none;border:1px solid var(--glass-border);border-radius:.75rem;padding:.6rem 1.5rem;color:var(--text-muted);cursor:pointer;font-family:inherit;font-size:.9rem;transition:all .2s;">
+          🔄 重新祈願
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Order Search Modal -->
+<div class="modal-overlay" id="search-order-modal">
+  <div class="modal" style="max-width:500px; max-height: 90vh; overflow-y: auto;">
+    <button class="modal-close" onclick="document.getElementById('search-order-modal').classList.remove('open')">×</button>
+    <h2>🔍 查詢訂單</h2>
+    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">請輸入您結帳時留下的聯絡電話來查詢訂單紀錄。</p>
+    
+    <form id="search-order-form">
+      <div class="form-group">
+        <label>聯絡電話</label>
+        <input type="tel" id="search-phone" required placeholder="09xxxxxxxx">
+      </div>
+      <button type="submit" class="btn-submit" id="search-submit-btn" style="margin-top:1.5rem;">查詢</button>
+    </form>
+    
+    <div id="search-results" style="margin-top: 2rem; display:none;"></div>
+  </div>
+</div>
+
+<!-- Cart Drawer -->
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header">
+    <h3>🛒 購物車</h3>
+    <button id="cart-drawer-close" class="cart-drawer-close-btn">✕</button>
+  </div>
+  <div class="cart-drawer-body" id="cart-drawer-body"></div>
+  <div class="cart-drawer-footer">
+    <div id="cart-summary" style="margin-bottom: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: none;">
+      <div style="display:flex; justify-content:space-between; margin-bottom: .2rem; font-size:.85rem; color:var(--text-muted);">
+        <span>商品小計</span>
+        <span id="cart-subtotal">NT$ 0</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom: .2rem; font-size:.85rem; color:var(--text-muted);">
+        <span>預計運費</span>
+        <span id="cart-shipping-fee">NT$ 0</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom: .2rem; font-size:.85rem; color:var(--text-muted);">
+        <span>手續費</span>
+        <span id="cart-handling-fee">NT$ 0</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top: .5rem; font-size:1rem; font-weight:600; color:var(--gold-light);">
+        <span>總計</span>
+        <span id="cart-total-price">NT$ 0</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:.5rem;">
+      <button id="cart-clear-btn" class="cart-footer-btn cart-clear">🗑 清空</button>
+      <button id="cart-checkout-btn" class="cart-footer-btn cart-checkout">📋 複製訂單</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>靈晶祝福 © 2025 ｜ 本網站提供之能量分析僅供參考</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/stars.js"></script>
+<script src="/js/crystals.js"></script>
+<script src="/js/crystal-bead.js"></script>
+<script src="/js/cart.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>水晶百科｜靈晶祝福</title>
+  <meta name="description" content="探索 20 種常見水晶的五行屬性、功效、串珠搭配與神明對應，找到最適合您的能量水晶。" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+
+<nav>
+  <a href="/" class="nav-logo">✨ 靈晶祝福</a>
+  <div class="nav-links">
+    <a href="/">祝福首頁</a>
+    <a href="/crystals.html">水晶百科</a>
+    <button id="cart-btn" class="cart-nav-btn" title="購物車">
+      🛒
+      <span id="cart-badge" class="cart-badge" style="display:none;">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+  <section class="crystals-section">
+    <div class="container">
+      <h1 class="section-title">💎 水晶百科</h1>
+      <p class="section-sub">20 種能量水晶的五行屬性、功效與搭配指南</p>
+
+      <!-- Filter -->
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem;" id="filter-bar">
+        <button class="tab-btn active" data-filter="all">全部</button>
+        <button class="tab-btn" data-filter="金">金</button>
+        <button class="tab-btn" data-filter="木">木</button>
+        <button class="tab-btn" data-filter="水">水</button>
+        <button class="tab-btn" data-filter="火">火</button>
+        <button class="tab-btn" data-filter="土">土</button>
+      </div>
+
+      <div class="crystals-grid" id="crystals-grid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Cart Drawer -->
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header">
+    <h3>🛒 購物車</h3>
+    <button id="cart-drawer-close" class="cart-drawer-close-btn">✕</button>
+  </div>
+  <div class="cart-drawer-body" id="cart-drawer-body"></div>
+  <div class="cart-drawer-footer">
+    <button id="cart-clear-btn" class="cart-footer-btn cart-clear">🗑 清空</button>
+    <button id="cart-checkout-btn" class="cart-footer-btn cart-checkout">📋 複製訂單</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <p>靈晶祝福 © 2025 ｜ 本網站提供之水晶資訊僅供參考</p>
+</footer>
+
+<script src="/js/stars.js"></script>
+<script src="/js/crystal-bead.js"></script>
+<script src="/js/cart.js"></script>
+<script src="/js/crystals.js"></script>
+</body>
+</html>

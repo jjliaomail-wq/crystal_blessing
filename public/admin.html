@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理後台｜靈晶祝福</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+
+<nav>
+  <a href="/" class="nav-logo">✨ 靈晶祝福</a>
+  <div class="nav-links">
+    <a href="/">祝福首頁</a>
+    <a href="/crystals.html">水晶百科</a>
+  </div>
+</nav>
+
+<div class="page">
+  <section class="admin-section">
+    <div class="container" style="max-width: 1200px;">
+      <h1 class="section-title">🔐 管理後台</h1>
+      <p class="section-sub">查看所有祈願紀錄並匯出資料</p>
+
+      <!-- Login -->
+      <div class="admin-login glass-card" id="login-box">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="admin-pw">🔑 管理員密碼</label>
+          <input id="admin-pw" type="password" placeholder="輸入密碼" />
+        </div>
+        <button id="btn-login" class="btn-submit">登入</button>
+        <div id="login-error" style="color:#e05252;font-size:.85rem;margin-top:.75rem;display:none;">密碼錯誤，請再試一次</div>
+      </div>
+
+      <!-- Dashboard (hidden until login) -->
+      <div id="dashboard" style="display:none;">
+        <div class="result-tabs" style="margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:.5rem;">
+          <button class="tab-btn active" id="tab-records-btn">📜 祈願紀錄</button>
+          <button class="tab-btn" id="tab-prices-btn">💰 水晶定價</button>
+        </div>
+
+        <div id="panel-records" style="display:block;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+            <div>
+              <span id="record-count" style="color:var(--gold-light);font-size:1.1rem;font-weight:600;"></span>
+              <span style="color:var(--text-muted);font-size:.9rem;margin-left:.5rem;">筆祈願紀錄</span>
+            </div>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+              <button class="btn-export" id="btn-export-excel">📥 匯出 Excel</button>
+              <button id="btn-logout" style="background:none;border:1px solid var(--glass-border);border-radius:.75rem;padding:.5rem 1rem;color:var(--text-muted);cursor:pointer;font-size:.85rem;">登出</button>
+            </div>
+          </div>
+
+        <!-- Search -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <input id="search-input" type="text" placeholder="🔍 搜尋姓名、Email..." style="max-width:300px;" />
+        </div>
+
+        <div class="admin-table-wrap glass-card" style="padding:1rem;">
+          <table id="records-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>時間</th>
+                <th>姓名</th>
+                <th>性別</th>
+                <th>生日</th>
+                <th>時辰</th>
+                <th>宗教</th>
+                <th>Email</th>
+                <th>手機/LINE</th>
+                <th>手圍</th>
+                <th>水晶選配</th>
+                <th>訂單狀態</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="records-body"></tbody>
+          </table>
+        </div>
+        </div> <!-- end panel-records -->
+
+        <div id="panel-prices" style="display:none;">
+          <div class="glass-card" style="padding:1.5rem;">
+            <h2 style="font-family:'Noto Serif TC', serif; color:var(--gold-light); margin-bottom:.5rem;">💎 設定水晶單價</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">設定每顆水晶的單價與名稱。儲存後將生效於新的結帳。</p>
+            <form id="price-form">
+              <div id="prices-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:1rem; margin-bottom: 2rem;">
+                <!-- JS generated -->
+              </div>
+              
+              <h3 style="font-family:'Noto Serif TC', serif; color:var(--gold-light); margin-bottom:.5rem;">📦 其他費用設定</h3>
+              <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:1rem; margin-bottom: 2rem;">
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:.75rem; padding:1rem;">
+                  <div style="font-size:.9rem; font-weight:600; color:var(--gold-light);">🚚 預設運費</div>
+                  <div style="display:flex; align-items:center; gap:.5rem; margin-top:.4rem;">
+                    <span style="color:var(--text-muted); font-size:.85rem;">NT$</span>
+                    <input type="number" id="setting_shipping_fee" name="setting_shipping_fee" value="0" min="0" style="width:100%; padding:.4rem; border-radius:.5rem; border:1px solid var(--glass-border); background:rgba(0,0,0,.2); color:var(--text); text-align:right;">
+                  </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:.75rem; padding:1rem;">
+                  <div style="font-size:.9rem; font-weight:600; color:var(--gold-light);">⚙️ 預設手續費</div>
+                  <div style="display:flex; align-items:center; gap:.5rem; margin-top:.4rem;">
+                    <span style="color:var(--text-muted); font-size:.85rem;">NT$</span>
+                    <input type="number" id="setting_handling_fee" name="setting_handling_fee" value="0" min="0" style="width:100%; padding:.4rem; border-radius:.5rem; border:1px solid var(--glass-border); background:rgba(0,0,0,.2); color:var(--text); text-align:right;">
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit" id="btn-save-prices" style="max-width:200px;">儲存設定</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/stars.js"></script>
+<script src="/js/crystals.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>
