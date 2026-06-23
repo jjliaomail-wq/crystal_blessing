@@ -300,8 +300,11 @@ function _renderCrystalCards(crystalText) {
     const beadsMatch = block.match(/珠數建議[：:]\s*(.+)/);
     const beadDetails = beadsMatch ? beadsMatch[1].trim() : '';
     
+    const recipeMatch = block.match(/水晶配方[：:]\s*(.+)/);
+    const recipeDetails = recipeMatch ? recipeMatch[1].trim() : '';
+    
     // Combine custom bracelet name and details for the cart
-    const details = nameLine + (beadDetails ? ` (${beadDetails})` : '');
+    const details = nameLine + (recipeDetails ? ` - 配方: ${recipeDetails}` : '') + (beadDetails ? ` (${beadDetails})` : '');
 
     return { nameLine, matched, block, details };
   }).filter(Boolean);
