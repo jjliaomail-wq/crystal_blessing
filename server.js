@@ -104,8 +104,19 @@ async function getStoreData() {
     if (pRes.data && pRes.data.values) {
       pRes.data.values.forEach(row => {
         if (row[0] && row[0] !== '水晶代號') {
-          prices[row[0]] = parseInt(row[2]) || 0;
-          names[row[0]] = row[1] || '';
+          const rawId = row[0].toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+          let id = rawId;
+          if (rawId === 'rosequartz') id = 'rose-quartz';
+          if (rawId === 'blackobsidian' || rawId === 'black-obsidian') id = 'obsidian';
+          if (rawId === 'clearquartz') id = 'clear-quartz';
+          if (rawId === 'greenphantom' || rawId === 'green-phantom-quartz') id = 'green-phantom';
+          if (rawId === 'smokyquartz') id = 'smoky-quartz';
+          if (rawId === 'lapislazuli') id = 'lapis-lazuli';
+          if (rawId === 'blacktourmaline') id = 'black-tourmaline';
+          if (rawId === 'tigereye') id = 'tiger-eye';
+          
+          prices[id] = parseInt(row[2]) || 0;
+          names[id] = row[1] || '';
         }
       });
     }
