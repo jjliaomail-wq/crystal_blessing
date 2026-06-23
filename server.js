@@ -90,11 +90,18 @@ async function getStoreData() {
   if (!sheets) return storeCache;
 
   try {
-    const pRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Prices!A:C' }).catch(()=>({data:{values:[]}}));
-    const sRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Settings!A:B' }).catch(()=>({data:{values:[]}}));
+    let pRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Prices!A:C' }).catch(() => null);
+    if (!pRes) {
+      pRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'PRICE!A:C' }).catch(() => ({ data: { values: [] } }));
+    }
+    
+    let sRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'Settings!A:B' }).catch(() => null);
+    if (!sRes) {
+      sRes = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: 'SETTINGS!A:B' }).catch(() => ({ data: { values: [] } }));
+    }
     
     const prices = {}, names = {}, settings = {};
-    if (pRes.data.values) {
+    if (pRes.data && pRes.data.values) {
       pRes.data.values.forEach(row => {
         if (row[0] && row[0] !== '水晶代號') {
           prices[row[0]] = parseInt(row[2]) || 0;
@@ -102,7 +109,7 @@ async function getStoreData() {
         }
       });
     }
-    if (sRes.data.values) {
+    if (sRes.data && sRes.data.values) {
       sRes.data.values.forEach(row => {
         if (row[0] && row[0] !== '設定項') settings[row[0]] = row[1];
       });
@@ -151,7 +158,7 @@ function buildPrompt({ name, gender, birthdate, birthtime, religion, wrist_size,
 【水晶串珠推薦】
 請根據流年與命格缺漏，以及祈願者的主要需求（\${demand || '一般開運'}），設計 3 條專屬客製化水晶手鏈。
 手鍊的名稱「絕對不要」只用「紫水晶手鍊」、「黃水晶手鍊」等無趣的分類名，請務必幫我取一個「文謅謅、典雅、富有靈性與意境的 4~6 字中文名稱」（例如：紫霞凝神手鍊、金沙聚富手繩、絳雪明眸手鍊、碧海平潮手環等）當作標題。
-請依照手圍尺寸（\${wristLabel}）計算各個配石的「珠子數量」配置。為求靈性與能量的多元互補，手鍊「可以不只兩種珠子，可以多種不同的水晶搭配」。總顆數須剛好符合手圍建議的總珠數（例如 15cm 手圍 8mm 珠子共約 20 顆）。
+請依照手圍尺寸（\${wristLabel}）計算各個配石的「珠子數量」配置。為求靈性與能量的多元互補，每條手鍊請「搭配 2 到 5 種不同的水晶」（不用每次都只有兩種，可以更豐富）。總顆數須剛好符合手圍建議的總珠數（例如 15cm 手圍 8mm 珠子共約 20 顆）。
 每條手鍊請精確使用以下格式輸出（請嚴格遵守，以便系統解析，水晶配方部分的水晶名稱請一定要和百科中的水晶名稱一致，例如：紫水晶、白水晶、黃水晶、粉水晶、黑曜石、月光石、拉長石、海藍寶、虎眼石、綠幽靈、紅紋石、茶晶、捷克隕石、蘇打石、孔雀石、石榴石、青金石、黑碧璽、螢石、黃鐵礦）：
 
 🔮 [手鍊名稱]
@@ -184,8 +191,8 @@ function generateMockResult({ name, gender, birthdate, birthtime, religion, wris
 🔮 測試用紫水晶手鍊
 • 核心功效：測試
 • 適合原因：測試
-• 水晶配方：紫水晶(\${beads}顆)
-• 珠數建議：總計 \${beads} 顆 8mm 珠子以符合 \${wrist} cm 手圍。
+• 水晶配方：紫水晶(${beads}顆)
+• 珠數建議：總計 ${beads} 顆 8mm 珠子以符合 ${wrist} cm 手圍。
 • 佩戴注意：測試
 ---SECTION3---
 【神明加持推薦】
@@ -294,7 +301,12 @@ app.post('/api/order', async (req, res) => {
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASS;
     if (smtpUser && smtpPass) {
-      const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: smtpUser, pass: smtpPass } });
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // TLS
+        auth: { user: smtpUser, pass: smtpPass }
+      });
       const itemsHtml = items.map(i => `<li>${i.name} x ${i.qty}<br><small style="color:#666">${i.details || ''}</small></li>`).join('');
       const mailOptions = {
         from: `"靈晶祝福" <${smtpUser}>`,
