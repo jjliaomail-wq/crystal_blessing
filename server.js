@@ -26,16 +26,20 @@ const openaiKeys = (process.env.OPENAI_API_KEY || '').split(',').map(k => k.trim
 const openaiClients = openaiKeys.map(key => OpenAI ? new OpenAI({ apiKey: key }) : null).filter(c => c);
 
 async function generateWithFallback(prompt) {
-  let lastError;
+  let errors = [];
+  
+  // 1. Try Gemini
   for (let i = 0; i < geminiModels.length; i++) {
     try {
       const result = await geminiModels[i].generateContent(prompt);
       return result.response.text();
     } catch (err) {
       console.warn(`[Gemini API] Key ${i + 1}/${geminiModels.length} failed:`, err.message);
-      lastError = err;
+      errors.push(`Gemini(${i+1}): ${err.message}`);
     }
   }
+
+  // 2. Try OpenAI as fallback
   for (let i = 0; i < openaiClients.length; i++) {
     try {
       const response = await openaiClients[i].chat.completions.create({
@@ -45,10 +49,11 @@ async function generateWithFallback(prompt) {
       return response.choices[0].message.content;
     } catch (err) {
       console.warn(`[OpenAI API] Key ${i + 1}/${openaiClients.length} failed:`, err.message);
-      lastError = err;
+      errors.push(`OpenAI(${i+1}): ${err.message}`);
     }
   }
-  throw lastError || new Error("無可用或有效的 API Key");
+
+  throw new Error("API 呼叫全數失敗。錯誤細節 -> " + errors.join(' | '));
 }
 
 // ── Google Sheets ─────────────────────────────────────────────────────────────
@@ -426,9 +431,21 @@ app.get('/api/debug', async (req, res) => {
     sheetsStatus = 'error: ' + e.message;
   }
 
+  let geminiTestResult = 'Not tested';
+  if (hasGemini) {
+    try {
+      const testModel = geminiModels[0];
+      const resTest = await testModel.generateContent('ping');
+      geminiTestResult = 'Success: ' + resTest.response.text();
+    } catch (err) {
+      geminiTestResult = 'Error: ' + err.message;
+    }
+  }
+
   res.json({
     ai: {
       gemini_configured: hasGemini,
+      gemini_test_result: geminiTestResult,
       openai_configured: hasOpenAI,
       openai_keys_count: openaiKeys.length
     },
