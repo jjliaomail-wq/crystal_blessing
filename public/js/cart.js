@@ -38,11 +38,11 @@ const Cart = (() => {
       let match;
       let matchedAny = false;
       while ((match = regex.exec(item.details)) !== null) {
-        matchedAny = true;
         const name = match[1];
         const count = parseInt(match[2], 10);
         const c = typeof CRYSTALS !== 'undefined' ? CRYSTALS.find(x => x.name === name) : null;
         if (c && storePrices[c.id]) {
+          matchedAny = true;
           price += storePrices[c.id] * count;
         }
       }

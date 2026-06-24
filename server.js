@@ -409,6 +409,42 @@ app.get('/api/order/search', async (req, res) => {
   }
 });
 
+// ── API: Debug ──────────────────────────────────────────────────────────────
+app.get('/api/debug', async (req, res) => {
+  const hasGemini = geminiModels.length > 0;
+  const hasOpenAI = openaiClients.length > 0;
+  const hasSheetId = !!SHEET_ID;
+  const hasGoogleCreds = !!process.env.GOOGLE_CREDENTIALS;
+  const hasSAPath = SA_PATH && fs.existsSync(SA_PATH);
+  
+  let sheetsStatus = 'not_initialized';
+  try {
+    const s = await getSheetsClient();
+    sheetsStatus = s ? 'client_created' : 'client_null';
+  } catch(e) {
+    sheetsStatus = 'error: ' + e.message;
+  }
+
+  res.json({
+    ai: {
+      gemini_configured: hasGemini,
+      openai_configured: hasOpenAI,
+      openai_keys_count: openaiKeys.length
+    },
+    google_sheets: {
+      has_sheet_id: hasSheetId,
+      has_google_credentials_env: hasGoogleCreds,
+      has_sa_path_file: hasSAPath,
+      status: sheetsStatus,
+      storeCacheKeys: Object.keys(storeCache.prices).length
+    },
+    env_keys_present: {
+      OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
+      GOOGLE_CREDENTIALS: !!process.env.GOOGLE_CREDENTIALS
+    }
+  });
+});
+
 // ── SPA fallback ──────────────────────────────────────────────────────────────
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
