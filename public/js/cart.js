@@ -33,7 +33,8 @@ const Cart = (() => {
   function parseBeadsPrice(item) {
     let price = 0;
     if (item.details) {
-      const regex = /([\u4e00-\u9fa5]+)\s*(\d+)\s*顆/g;
+      // 支援: 紫水晶(26顆) 或 紫水晶 26 顆
+      const regex = /([\u4e00-\u9fa5]+)\s*[(（]?\s*(\d+)\s*[)）]?\s*顆/g;
       let match;
       let matchedAny = false;
       while ((match = regex.exec(item.details)) !== null) {
