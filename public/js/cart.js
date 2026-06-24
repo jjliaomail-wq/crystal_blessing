@@ -311,6 +311,10 @@ const Cart = (() => {
                 <option value="ATM 轉帳">ATM 轉帳</option>
               </select>
             </div>
+            
+            <div id="payment-info-box" style="display:none; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:.5rem; padding:.75rem; margin-bottom:1.5rem; font-size:.85rem; color:var(--text-muted);">
+            </div>
+
             <div class="form-group">
               <label>收件地址 / 門市名稱</label>
               <input type="text" id="co-address" required placeholder="請填寫完整地址或超商門市">
@@ -424,7 +428,23 @@ const Cart = (() => {
     // Add listeners once by replacing element (or just remove old listeners, but since it's anonymous we can use oninput)
     sFeeInput.oninput = updateTotal;
     hFeeInput.oninput = updateTotal;
-    updateTotal();
+    // Payment method info logic
+    const paySelect = document.getElementById('co-payment');
+    const payInfo = document.getElementById('payment-info-box');
+    function updatePayInfo() {
+      const val = paySelect.value;
+      if (val === 'ATM 轉帳') {
+        payInfo.style.display = 'block';
+        payInfo.innerHTML = '<strong style="color:var(--gold-light);">🏦 匯款帳號資訊</strong><br>銀行代碼：808 (玉山銀行)<br>帳號：1234-567-890123<br>戶名：靈晶祝福商行<br><br>請於下單後 3 日內完成匯款，以免訂單取消。';
+      } else if (val === '信用卡') {
+        payInfo.style.display = 'block';
+        payInfo.innerHTML = '<strong style="color:var(--gold-light);">💳 信用卡線上付款</strong><br>目前金流服務（如綠界科技/藍新）尚未正式開通，送出訂單後客服將會與您聯繫完成付款手續。';
+      } else {
+        payInfo.style.display = 'none';
+      }
+    }
+    paySelect.onchange = updatePayInfo;
+    updatePayInfo();
 
     modal.classList.add('open');
   }
