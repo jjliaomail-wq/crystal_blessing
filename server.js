@@ -84,6 +84,12 @@ async function getSheetsClient() {
 let storeCache = { prices: {}, names: {}, settings: {} };
 let storeCacheTime = 0;
 
+// AI 使用量計數器 (每日重置)
+let aiUsage = {
+  date: new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' }),
+  count: 0
+};
+
 async function getStoreData() {
   if (Date.now() - storeCacheTime < 60000) return storeCache; // Cache for 1 min
   const sheets = await getSheetsClient();
@@ -226,10 +232,23 @@ app.post('/api/reading', async (req, res) => {
   if (!name || !gender || !birthdate) return res.status(400).json({ error: '姓名、性別、出生日期為必填' });
 
   try {
+    const today = new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
+    if (aiUsage.date !== today) {
+      aiUsage.date = today;
+      aiUsage.count = 0;
+    }
+
+    const maxCalls = parseInt(storeCache.settings['MAX_AI_CALLS_PER_DAY'] || process.env.MAX_AI_CALLS_PER_DAY || '50');
+    if (aiUsage.count >= maxCalls) {
+      return res.status(429).json({ error: '非常抱歉，今日 AI 服務次數已達上限，請明日再試。' });
+    }
+
     const prompt = buildPrompt({ name, gender, birthdate, birthtime, religion, wrist_size, email, phone, demand });
     let aiText;
     try {
       aiText = await generateWithFallback(prompt);
+      aiUsage.count++;
+      console.log(`[AI Usage] Today: ${aiUsage.count} / ${maxCalls}`);
     } catch (apiErr) {
       console.warn('[API] Fallback to mock result:', apiErr.message);
       aiText = generateMockResult({ name, gender, birthdate, birthtime, religion, wrist_size, demand });
