@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const apiKeys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
 const geminiModels = apiKeys.map(key => {
   const genAI = new GoogleGenerativeAI(key);
-  return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  return genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 });
 
 const openaiKeys = (process.env.OPENAI_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
@@ -251,7 +251,8 @@ app.post('/api/reading', async (req, res) => {
       console.log(`[AI Usage] Today: ${aiUsage.count} / ${maxCalls}`);
     } catch (apiErr) {
       console.warn('[API] Fallback to mock result:', apiErr.message);
-      aiText = generateMockResult({ name, gender, birthdate, birthtime, religion, wrist_size, demand });
+      const mockStr = generateMockResult({ name, gender, birthdate, birthtime, religion, wrist_size, demand });
+      aiText = mockStr + `\n\n系統提示 (除錯用): API 失敗原因為 -> ${apiErr.message}`;
     }
 
     const sections = {
