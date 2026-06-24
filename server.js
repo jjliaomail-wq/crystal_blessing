@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const apiKeys = (process.env.GEMINI_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
 const geminiModels = apiKeys.map(key => {
   const genAI = new GoogleGenerativeAI(key);
-  return genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+  return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 });
 
 const openaiKeys = (process.env.OPENAI_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
