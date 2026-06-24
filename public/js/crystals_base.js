@@ -389,7 +389,7 @@ function openModal(id) {
       <a href="/" style="display:inline-block;padding:.65rem 1.5rem;background:linear-gradient(135deg,var(--purple),#9333ea);border-radius:.75rem;color:#fff;text-decoration:none;font-size:.9rem;">
         🔮 用此水晶祈願
       </a>
-      <button class="btn-add-cart" onclick="if(typeof Cart!=='undefined'){Cart.addItem('${c.id}');Cart.showAddAnimation('${c.name}');const b=document.getElementById('cart-badge');if(b){b.classList.add('pulse');setTimeout(()=>b.classList.remove('pulse'),600)}}">
+      <button class="btn-add-cart" onclick="if(typeof Cart!=='undefined'){Cart.addItem('${c.id}', 1, '預設手鍊 (20顆)');Cart.showAddAnimation('${c.name}');const b=document.getElementById('cart-badge');if(b){b.classList.add('pulse');setTimeout(()=>b.classList.remove('pulse'),600)}}">
         🛒 加入購物車
       </button>
     </div>
