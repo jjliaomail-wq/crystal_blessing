@@ -205,6 +205,11 @@ if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // 強制讓當前焦點的輸入框失去焦點，這能解決手機鍵盤選字未完成或 Google 自動填寫未寫入 value 的問題
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+
     const picks = [...(form.querySelectorAll('input[name="crystal_picks"]:checked'))]
       .map(cb => cb.value);
 
