@@ -72,10 +72,10 @@ const Cart = (() => {
 
   function getItems() { return _load(); }
 
-  function addItem(crystalId, qty = 1, details = '') {
+  function addItem(crystalId, qty = 1, details = '', customName = '') {
     const items = _load();
     const cartItemId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-    items.push({ cartItemId, id: crystalId, qty, details });
+    items.push({ cartItemId, id: crystalId, qty, details, customName });
     _save(items);
     return items;
   }
@@ -148,6 +148,8 @@ const Cart = (() => {
           <p style="font-size:.8rem;color:var(--text-muted);margin-top:.5rem;">完成能量分析後即可加入推薦水晶</p>
         </div>
       `;
+      const summary = document.getElementById('cart-summary');
+      if (summary) summary.style.display = 'none';
       return;
     }
 
@@ -169,8 +171,8 @@ const Cart = (() => {
         <div class="cart-item" data-cid="${item.cartItemId}">
           <canvas class="cart-item-bead" data-bead="${item.id}" width="40" height="40"></canvas>
           <div class="cart-item-info">
-            <div class="cart-item-name">${c.name}</div>
-            <div class="cart-item-en">${c.en}</div>
+            <div class="cart-item-name">${item.customName || c.name}</div>
+            <div class="cart-item-en">${item.customName ? c.name : c.en}</div>
             ${item.details ? `<div style="font-size:0.75rem; color:var(--gold-light); margin-top:2px;">${item.details}</div>` : ''}
             <div style="font-size:0.85rem; color:var(--text); margin-top:4px;">NT$ ${itemPrice}</div>
           </div>
@@ -374,7 +376,7 @@ const Cart = (() => {
             const c = (typeof CRYSTALS !== 'undefined' ? CRYSTALS.find(x => x.id === i.id) : null);
             return {
               id: i.id,
-              name: c ? c.name : i.id,
+              name: i.customName || (c ? c.name : i.id),
               qty: i.qty,
               details: i.details,
               price: parseBeadsPrice(i)
@@ -445,6 +447,7 @@ const Cart = (() => {
     }
     paySelect.onchange = updatePayInfo;
     updatePayInfo();
+    updateTotal();
 
     modal.classList.add('open');
   }

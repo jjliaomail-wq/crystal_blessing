@@ -349,10 +349,9 @@ function _renderCrystalCards(crystalText) {
       const crystalId = btn.dataset.crystal;
       const details = decodeURIComponent(btn.dataset.details);
       const name = btn.dataset.name;
-      Cart.addItem(crystalId, 1, details);
-      btn.textContent = '✅ 已加入';
-      btn.disabled = true;
-      btn.style.opacity = '0.6';
+      Cart.addItem(crystalId, 1, details, name);
+      btn.innerHTML = '✅ 已加入';
+      setTimeout(() => btn.innerHTML = '🛒 加入購物車', 1500);
       showToast(`🛒「${name}」已加入購物車`, 'success');
       const badge = document.getElementById('cart-badge');
       if (badge) { badge.classList.add('pulse'); setTimeout(() => badge.classList.remove('pulse'), 600); }
@@ -398,7 +397,10 @@ if (searchOrderForm) {
           try {
             const items = JSON.parse(order.order_details);
             itemsHtml = items.map(i => `<li>${i.name} x ${i.qty}<br><small style="color:var(--gold-light)">${i.details || ''}</small></li>`).join('');
-          } catch (e) { itemsHtml = '<li>無法解析訂單項目</li>'; }
+          } catch (e) {
+            // Not JSON, just display as formatted text
+            itemsHtml = `<li>${order.order_details.replace(/\n/g, '<br>')}</li>`;
+          }
           
           return `
             <div style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:1rem; padding:1rem; margin-bottom:1rem;">

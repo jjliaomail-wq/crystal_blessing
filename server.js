@@ -178,9 +178,9 @@ function buildPrompt({ name, gender, birthdate, birthtime, religion, wrist_size,
 
 ---SECTION2---
 【水晶串珠推薦】
-請根據流年與命格缺漏，以及祈願者的主要需求（${demand || '一般開運'}），設計 3 條專屬客製化水晶手鏈。
+請根據流年與命格缺漏，以及祈願者的主要需求（${demand || '一般開運'}），設計 2 到 4 條專屬客製化水晶手鏈（數量請依能量需求靈活搭配，並請盡量精簡說明以節省字數）。
 手鍊的名稱「絕對不要」只用「紫水晶手鍊」、「黃水晶手鍊」等無趣的分類名，請務必幫我取一個「文謅謅、典雅、富有靈性與意境的 4~6 字中文名稱」（例如：紫霞凝神手鍊、金沙聚富手繩、絳雪明眸手鍊、碧海平潮手環等）當作標題。
-請依照手圍尺寸（${wristLabel}）計算各個配石的「珠子數量」配置。為求靈性與能量的多元互補，每條手鍊請「搭配 2 到 5 種不同的水晶」（不用每次都只有兩種，可以更豐富）。總顆數須剛好符合手圍建議的總珠數（例如 15cm 手圍 8mm 珠子共約 20 顆）。
+請依照手圍尺寸（${wristLabel}）計算各個配石的「珠子數量」配置。為求靈性與能量的多元互補，每條手鍊請「依照祈願者的五行缺漏與需求自由調配多種不同的水晶」（種類數量不限，缺什麼就補什麼，可以盡量多種搭配）。總顆數須剛好符合手圍建議的總珠數（例如 15cm 手圍 8mm 珠子共約 20 顆）。
 每條手鍊請精確使用以下格式輸出（請嚴格遵守，以便系統解析，水晶配方部分的水晶名稱請一定要和百科中的水晶名稱一致，例如：紫水晶、白水晶、黃水晶、粉水晶、黑曜石、月光石、拉長石、海藍寶、虎眼石、綠幽靈、紅紋石、茶晶、捷克隕石、蘇打石、孔雀石、石榴石、青金石、黑碧璽、螢石、黃鐵礦）：
 
 🔮 [手鍊名稱]
@@ -255,6 +255,9 @@ app.post('/api/reading', async (req, res) => {
       aiUsage.count++;
       console.log(`[AI Usage] Today: ${aiUsage.count} / ${maxCalls}`);
     } catch (apiErr) {
+      if (apiErr.message.includes('429') || apiErr.message.includes('quota') || apiErr.message.includes('insufficient')) {
+        return res.status(429).json({ error: 'AI 服務額度已滿或目前過載，請稍候（約數分鐘至數小時）再試，或明日再來。' });
+      }
       console.warn('[API] Fallback to mock result:', apiErr.message);
       const mockStr = generateMockResult({ name, gender, birthdate, birthtime, religion, wrist_size, demand });
       aiText = mockStr + `\n\n系統提示 (除錯用): API 失敗原因為 -> ${apiErr.message}`;
@@ -292,7 +295,7 @@ app.post('/api/reading', async (req, res) => {
 
 // ── API: 結帳下單 ───────────────────────────────────────────────────────────
 app.post('/api/order', async (req, res) => {
-  const { readingId, email, phone, shipping_method, payment_method, address, items } = req.body;
+  const { readingId, email, phone, shipping_method, payment_method, address, items, subtotal, shipping_fee, handling_fee, total_price } = req.body;
   if (!readingId || !email || !phone || !shipping_method || !address || !items || !items.length) {
     return res.status(400).json({ error: '訂單資訊不完整' });
   }
@@ -305,18 +308,19 @@ app.post('/api/order', async (req, res) => {
       const rows = response.data.values || [];
       const rowIndex = rows.findIndex(r => r[0] === readingId);
       
+      const formattedDetails = items.map(i => `${i.name} x${i.qty}\n配方/細節: ${i.details || '無'}\n單價: ${i.price}元`).join('\n\n') + `\n\n小計: ${subtotal||0}元\n運費: ${shipping_fee||0}元\n手續費: ${handling_fee||0}元\n總計: ${total_price||0}元`;
+
       if (rowIndex !== -1) {
         // Update columns K (Email) to P (Order Details)
         // Row index in API is 1-based, so rowIndex + 1
         const targetRow = rowIndex + 1;
-        const orderDetailsStr = items.map(i => `${i.name} x${i.qty}`).join(', ');
         
         await sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
           range: `Orders!K${targetRow}:P${targetRow}`,
           valueInputOption: 'USER_ENTERED',
           requestBody: { values: [
-            [email, phone, shipping_method, payment_method, address, JSON.stringify(items)]
+            [email, phone, shipping_method, payment_method, address, formattedDetails]
           ] }
         });
       } else {
@@ -327,7 +331,7 @@ app.post('/api/order', async (req, res) => {
           range: 'Orders!A:Q',
           valueInputOption: 'USER_ENTERED',
           requestBody: { values: [
-            [readingId, ts, 'Checkout User', '', '', '', '', '', '', '', email, phone, shipping_method, payment_method, address, JSON.stringify(items), '']
+            [readingId, ts, 'Checkout User', '', '', '', '', '', '', '', email, phone, shipping_method, payment_method, address, formattedDetails, '']
           ] },
         });
       }
@@ -343,13 +347,14 @@ app.post('/api/order', async (req, res) => {
         secure: false, // TLS
         auth: { user: smtpUser, pass: smtpPass }
       });
-      const itemsHtml = items.map(i => `<li>${i.name} x ${i.qty}<br><small style="color:#666">${i.details || ''}</small></li>`).join('');
+      const itemsHtml = items.map(i => `<li style="margin-bottom:10px;"><strong>${i.name}</strong> x ${i.qty}<br><small style="color:#666">${i.details || ''}</small><br><span style="color:#e67e22">金額：${i.price * i.qty} 元</span></li>`).join('');
       const mailOptions = {
         from: `"靈晶祝福" <${smtpUser}>`,
         to: email,
         subject: `【靈晶祝福】您的專屬水晶訂單已建立！`,
         html: `<h2>您好！</h2><p>感謝您使用靈晶祝福，我們已收到您的客製化水晶訂單。</p>
-          <h3>🛍️ 您的訂單明細：</h3><ul>${itemsHtml}</ul><hr>
+          <h3>🛍️ 您的訂單明細：</h3><ul>${itemsHtml}</ul>
+          <h3>💰 總金額：${total_price || 0} 元 (含運費 ${shipping_fee||0} 及手續費 ${handling_fee||0})</h3><hr>
           <p><strong>寄送方式：</strong> ${shipping_method}</p>
           <p><strong>付款方式：</strong> ${payment_method}</p>
           <p><strong>收件地址/門市：</strong> ${address}</p><hr>
