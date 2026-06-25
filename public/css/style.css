@@ -24,7 +24,7 @@ body {
   color: var(--text);
   font-family: 'Noto Sans TC', sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ── Stars Background ────────────────────────────────────────────────────── */
@@ -329,6 +329,12 @@ input::placeholder { color: rgba(167,139,250,0.4); }
   border-bottom: 1px solid var(--glass-border);
   padding-bottom: .5rem;
   overflow-x: auto;
+  /* Sticky tabs — stays at top when scrolling through results */
+  position: sticky;
+  top: var(--nav-height, 56px);
+  z-index: 50;
+  background: var(--bg);
+  padding-top: .5rem;
 }
 .tab-btn {
   background: none;
@@ -845,8 +851,82 @@ footer {
 @media (max-width: 600px) {
   .form-grid { grid-template-columns: 1fr; }
   .form-group.full { grid-column: 1; }
-  nav { flex-wrap: wrap; gap: .5rem; }
+  nav {
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: .7rem 1rem;
+    position: sticky;
+    top: 0;
+  }
+  .nav-links {
+    gap: .75rem;
+    font-size: .82rem;
+  }
+  .nav-links a { font-size: .78rem; }
   .cart-drawer { width: 100%; max-width: 100vw; }
+
+  /* Result tabs - sticky below nav on mobile */
+  .result-tabs {
+    top: var(--nav-height, 56px);
+    gap: .25rem;
+    padding: .5rem 0;
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-btn {
+    padding: .4rem .75rem;
+    font-size: .8rem;
+  }
+
+  /* Glass card less padding on mobile */
+  .glass-card {
+    padding: 1.25rem 1rem;
+  }
+
+  /* Crystal recommendation cards - fix text overflow */
+  .crystal-rec-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+  }
+  .crystal-rec-name {
+    font-size: .95rem;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  .crystal-rec-beads {
+    font-size: .72rem;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .crystal-rec-body {
+    font-size: .8rem;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .crystal-rec-card {
+    padding: 1rem;
+  }
+  .btn-add-cart {
+    width: 100%;
+    justify-content: center;
+    padding: .55rem 1rem;
+    font-size: .82rem;
+  }
+
+  /* Section title smaller on mobile */
+  .section-title {
+    font-size: 1.3rem;
+  }
+  .section-sub {
+    font-size: .82rem;
+  }
+
+  /* Result text smaller on mobile */
+  .result-text {
+    font-size: .85rem;
+    line-height: 1.8;
+  }
 }
 
 /* ── Crystal Recommendation Cards ───────────────────────────────────────── */
@@ -861,6 +941,12 @@ footer {
   align-items: center;
   gap: 1rem;
   margin-bottom: .75rem;
+}
+
+/* Prevent text overflow in crystal rec header */
+.crystal-rec-header > div {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .crystal-rec-bead {

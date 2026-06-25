@@ -4,3 +4,7 @@ credentials/
 db/
 *.db
 *.xlsx
+test_gemini2.js
+check_sheet.js
+download_missing.js
+download_unsplash.js

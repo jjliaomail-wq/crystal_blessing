@@ -1,3 +1,12 @@
+// ── Dynamic nav height for sticky tabs ────────────────────────────────────
+(function setNavHeight() {
+  const nav = document.querySelector('nav');
+  if (!nav) return;
+  const update = () => document.documentElement.style.setProperty('--nav-height', nav.offsetHeight + 'px');
+  update();
+  window.addEventListener('resize', update);
+})();
+
 // ── Toast ─────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
