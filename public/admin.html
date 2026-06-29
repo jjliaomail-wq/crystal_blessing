@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>管理後台｜靈晶祝福</title>
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .toggle-switch { position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); transition:.3s; border-radius:26px; }
+    .toggle-slider::before { content:''; position:absolute; height:20px; width:20px; left:2px; bottom:2px; background:#888; transition:.3s; border-radius:50%; }
+    .toggle-switch input:checked + .toggle-slider { background:rgba(74,222,128,.25); border-color:rgba(74,222,128,.5); }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(22px); background:#4ade80; }
+    .settings-card { background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:.75rem; padding:1.25rem; margin-bottom:1rem; }
+    .settings-card-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.75rem; }
+    .settings-card-title { font-size:.95rem; font-weight:600; }
+    .settings-field { margin-bottom:.6rem; }
+    .settings-field label { display:block; font-size:.8rem; color:var(--text-muted); margin-bottom:.25rem; }
+    .settings-field input, .settings-field textarea { width:100%; padding:.4rem .6rem; border-radius:.5rem; border:1px solid var(--glass-border); background:rgba(0,0,0,.2); color:var(--text); font-size:.85rem; }
+    .settings-field textarea { resize:vertical; min-height:60px; font-family:inherit; }
+    .settings-detail-box { padding:.75rem; background:rgba(0,0,0,.15); border-radius:.5rem; margin-top:.5rem; }
+    .badge-on { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:.7rem; font-weight:600; background:rgba(74,222,128,.15); color:#4ade80; border:1px solid rgba(74,222,128,.3); }
+    .badge-off { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:.7rem; font-weight:600; background:rgba(255,100,100,.1); color:#f87171; border:1px solid rgba(255,100,100,.2); }
+  </style>
 </head>
 <body>
 <canvas id="stars-canvas"></canvas>
@@ -38,6 +56,7 @@
         <div class="result-tabs" style="margin-bottom:1rem; border-bottom:1px solid var(--glass-border); padding-bottom:.5rem;">
           <button class="tab-btn active" id="tab-records-btn">📜 祈願紀錄</button>
           <button class="tab-btn" id="tab-prices-btn">💰 水晶定價</button>
+          <button class="tab-btn" id="tab-settings-btn">⚙️ 交易設定</button>
         </div>
 
         <div id="panel-records" style="display:block;">
@@ -109,6 +128,125 @@
               </div>
 
               <button type="submit" class="btn-submit" id="btn-save-prices" style="max-width:200px;">儲存設定</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- ⚙️ 交易設定 panel -->
+        <div id="panel-settings" style="display:none;">
+          <div class="glass-card" style="padding:1.5rem;">
+            <h2 style="font-family:'Noto Serif TC', serif; color:var(--gold-light); margin-bottom:.5rem;">⚙️ 交易與運送設定</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">設定結帳頁面可用的付款方式與運送方式。關閉後客戶將無法選擇該選項。</p>
+
+            <form id="settings-form">
+              <!-- 付款方式 -->
+              <h3 style="font-family:'Noto Serif TC', serif; color:var(--gold-light); margin-bottom:.75rem;">💳 付款方式</h3>
+
+              <!-- 信用卡 -->
+              <div class="settings-card">
+                <div class="settings-card-header">
+                  <div style="display:flex;align-items:center;gap:.6rem;">
+                    <span style="font-size:1.2rem;">💳</span>
+                    <span class="settings-card-title" style="color:var(--gold-light);">信用卡</span>
+                    <span class="badge-on" id="badge-pay-credit">啟用中</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="set-pay-credit" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="settings-detail-box">
+                  <div class="settings-field">
+                    <label>顯示說明（客戶選擇信用卡時看到的提示）</label>
+                    <textarea id="set-credit-note" placeholder="例如：送出訂單後客服將與您聯繫完成信用卡付款手續。"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 貨到付款 -->
+              <div class="settings-card">
+                <div class="settings-card-header">
+                  <div style="display:flex;align-items:center;gap:.6rem;">
+                    <span style="font-size:1.2rem;">📦</span>
+                    <span class="settings-card-title" style="color:var(--gold-light);">貨到付款</span>
+                    <span class="badge-on" id="badge-pay-cod">啟用中</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="set-pay-cod" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- ATM 轉帳 -->
+              <div class="settings-card">
+                <div class="settings-card-header">
+                  <div style="display:flex;align-items:center;gap:.6rem;">
+                    <span style="font-size:1.2rem;">🏦</span>
+                    <span class="settings-card-title" style="color:var(--gold-light);">ATM 轉帳</span>
+                    <span class="badge-on" id="badge-pay-atm">啟用中</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="set-pay-atm" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="settings-detail-box">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:.5rem;">
+                    <div class="settings-field">
+                      <label>銀行代碼</label>
+                      <input type="text" id="set-atm-bank-code" placeholder="例如：808">
+                    </div>
+                    <div class="settings-field">
+                      <label>銀行名稱</label>
+                      <input type="text" id="set-atm-bank-name" placeholder="例如：玉山銀行">
+                    </div>
+                    <div class="settings-field">
+                      <label>帳號</label>
+                      <input type="text" id="set-atm-account" placeholder="例如：1234-567-890123">
+                    </div>
+                    <div class="settings-field">
+                      <label>戶名</label>
+                      <input type="text" id="set-atm-account-name" placeholder="例如：靈晶祝福商行">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 運送方式 -->
+              <h3 style="font-family:'Noto Serif TC', serif; color:var(--gold-light); margin-bottom:.75rem; margin-top:2rem;">🚚 運送方式</h3>
+
+              <!-- 超商取貨 -->
+              <div class="settings-card">
+                <div class="settings-card-header">
+                  <div style="display:flex;align-items:center;gap:.6rem;">
+                    <span style="font-size:1.2rem;">🏪</span>
+                    <span class="settings-card-title" style="color:var(--gold-light);">超商取貨 (7-11/全家)</span>
+                    <span class="badge-on" id="badge-ship-cvs">啟用中</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="set-ship-cvs" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 宅配到府 -->
+              <div class="settings-card">
+                <div class="settings-card-header">
+                  <div style="display:flex;align-items:center;gap:.6rem;">
+                    <span style="font-size:1.2rem;">🚛</span>
+                    <span class="settings-card-title" style="color:var(--gold-light);">宅配到府</span>
+                    <span class="badge-on" id="badge-ship-home">啟用中</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="set-ship-home" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit" id="btn-save-settings" style="max-width:200px; margin-top:1rem;">儲存交易設定</button>
             </form>
           </div>
         </div>

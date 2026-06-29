@@ -110,6 +110,17 @@ const Cart = (() => {
     return [];
   }
 
+  // Payment data fetching
+  let paymentData = null;
+  async function loadPaymentInfo() {
+    try {
+      const res = await fetch('/api/payment-info');
+      paymentData = await res.json();
+    } catch (e) {
+      paymentData = {};
+    }
+  }
+
   // ── Badge ───────────────────────────────────────────────────────────────
   function _updateBadge() {
     const badge = document.getElementById('cart-badge');
@@ -265,7 +276,7 @@ const Cart = (() => {
     }
   }
 
-  function _openCheckoutModal() {
+  async function _openCheckoutModal() {
     const items = _load();
     if (items.length === 0) {
       _toast('購物車是空的', 'error');
@@ -276,6 +287,9 @@ const Cart = (() => {
     const readingId = window.currentReadingId || '';
     const email = window.currentEmail || '';
     const phone = window.currentPhone || '';
+
+    // Fetch latest payment and shipping settings first
+    await loadPaymentInfo();
 
     // Create modal if not exists
     let modal = document.getElementById('checkout-modal');
@@ -300,18 +314,11 @@ const Cart = (() => {
             </div>
             <div class="form-group">
               <label>寄送方式</label>
-              <select id="co-shipping">
-                <option value="超商取貨">超商取貨 (7-11/全家)</option>
-                <option value="宅配到府">宅配到府</option>
-              </select>
+              <select id="co-shipping"></select>
             </div>
             <div class="form-group">
               <label>付款方式</label>
-              <select id="co-payment">
-                <option value="信用卡">信用卡</option>
-                <option value="貨到付款">貨到付款</option>
-                <option value="ATM 轉帳">ATM 轉帳</option>
-              </select>
+              <select id="co-payment"></select>
             </div>
             
             <div id="payment-info-box" style="display:none; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:.5rem; padding:.75rem; margin-bottom:1.5rem; font-size:.85rem; color:var(--text-muted);">
@@ -427,25 +434,28 @@ const Cart = (() => {
       document.getElementById('modal-total-price').textContent = `NT$ ${subtotal + s + h}`;
     }
 
+    // Populate dropdowns based on settings
+    const shipSelect = document.getElementById('co-shipping');
+    const paySelect = document.getElementById('co-payment');
+    
+    shipSelect.innerHTML = '';
+    if (paymentData.ship_cvs !== 'off') shipSelect.innerHTML += `<option value="超商取貨">超商取貨 (7-11/全家)</option>`;
+    if (paymentData.ship_home !== 'off') shipSelect.innerHTML += `<option value="宅配到府">宅配到府</option>`;
+    if (shipSelect.innerHTML === '') shipSelect.innerHTML = `<option value="">無可用運送方式</option>`;
+
+    paySelect.innerHTML = '';
+    if (paymentData.pay_credit_card !== 'off') paySelect.innerHTML += `<option value="信用卡">信用卡</option>`;
+    if (paymentData.pay_cod !== 'off') paySelect.innerHTML += `<option value="貨到付款">貨到付款</option>`;
+    if (paymentData.pay_atm !== 'off') paySelect.innerHTML += `<option value="ATM 轉帳">ATM 轉帳</option>`;
+    if (paySelect.innerHTML === '') paySelect.innerHTML = `<option value="">無可用付款方式</option>`;
+
     // Add listeners once by replacing element (or just remove old listeners, but since it's anonymous we can use oninput)
     sFeeInput.oninput = updateTotal;
     hFeeInput.oninput = updateTotal;
     // Payment method info logic
-    const paySelect = document.getElementById('co-payment');
     const payInfo = document.getElementById('payment-info-box');
-    let paymentData = null;
-
-    async function loadPaymentInfo() {
-      try {
-        const res = await fetch('/api/payment-info');
-        paymentData = await res.json();
-      } catch (e) {
-        paymentData = {};
-      }
-    }
 
     async function updatePayInfo() {
-      if (!paymentData) await loadPaymentInfo();
       const val = paySelect.value;
       if (val === 'ATM 轉帳') {
         payInfo.style.display = 'block';

@@ -165,20 +165,18 @@ document.getElementById('btn-logout').addEventListener('click', () => {
   document.getElementById('admin-pw').value = '';
 });
 
-// ── Tabs ──────────────────────────────────────────────────────────────────
-document.getElementById('tab-records-btn').addEventListener('click', () => {
-  document.getElementById('tab-records-btn').classList.add('active');
-  document.getElementById('tab-prices-btn').classList.remove('active');
-  document.getElementById('panel-records').style.display = 'block';
-  document.getElementById('panel-prices').style.display = 'none';
-});
-
-document.getElementById('tab-prices-btn').addEventListener('click', () => {
-  document.getElementById('tab-prices-btn').classList.add('active');
-  document.getElementById('tab-records-btn').classList.remove('active');
-  document.getElementById('panel-prices').style.display = 'block';
-  document.getElementById('panel-records').style.display = 'none';
-  loadPrices();
+// ── Tabs (generic) ────────────────────────────────────────────────────────
+const tabs = ['records', 'prices', 'settings'];
+function switchTab(active) {
+  tabs.forEach(t => {
+    document.getElementById(`tab-${t}-btn`).classList.toggle('active', t === active);
+    document.getElementById(`panel-${t}`).style.display = t === active ? 'block' : 'none';
+  });
+  if (active === 'prices') loadPrices();
+  if (active === 'settings') loadSettings();
+}
+tabs.forEach(t => {
+  document.getElementById(`tab-${t}-btn`).addEventListener('click', () => switchTab(t));
 });
 
 // ── Prices ────────────────────────────────────────────────────────────────
@@ -256,6 +254,116 @@ document.getElementById('price-form').addEventListener('submit', async (e) => {
     showToast(err.message, 'error');
   } finally {
     btn.textContent = '儲存設定';
+    btn.disabled = false;
+  }
+});
+
+// ── Transaction Settings ──────────────────────────────────────────────────
+const toggleMap = {
+  'set-pay-credit':  'pay_credit_card',
+  'set-pay-cod':     'pay_cod',
+  'set-pay-atm':     'pay_atm',
+  'set-ship-cvs':    'ship_cvs',
+  'set-ship-home':   'ship_home',
+};
+
+const badgeMap = {
+  'set-pay-credit':  'badge-pay-credit',
+  'set-pay-cod':     'badge-pay-cod',
+  'set-pay-atm':     'badge-pay-atm',
+  'set-ship-cvs':    'badge-ship-cvs',
+  'set-ship-home':   'badge-ship-home',
+};
+
+// Update badge when toggle changes
+Object.keys(toggleMap).forEach(id => {
+  const cb = document.getElementById(id);
+  if (!cb) return;
+  cb.addEventListener('change', () => {
+    const badge = document.getElementById(badgeMap[id]);
+    if (badge) {
+      badge.textContent = cb.checked ? '啟用中' : '已關閉';
+      badge.className = cb.checked ? 'badge-on' : 'badge-off';
+    }
+  });
+});
+
+async function loadSettings() {
+  try {
+    const res = await fetch('/api/prices');
+    const data = await res.json();
+    const s = data.settings || {};
+
+    // Payment toggles (default: on)
+    document.getElementById('set-pay-credit').checked = s['pay_credit_card'] !== 'off';
+    document.getElementById('set-pay-cod').checked = s['pay_cod'] !== 'off';
+    document.getElementById('set-pay-atm').checked = s['pay_atm'] !== 'off';
+
+    // Shipping toggles (default: on)
+    document.getElementById('set-ship-cvs').checked = s['ship_cvs'] !== 'off';
+    document.getElementById('set-ship-home').checked = s['ship_home'] !== 'off';
+
+    // ATM details
+    document.getElementById('set-atm-bank-code').value = s['atm_bank_code'] || '';
+    document.getElementById('set-atm-bank-name').value = s['atm_bank_name'] || '';
+    document.getElementById('set-atm-account').value = s['atm_account'] || '';
+    document.getElementById('set-atm-account-name').value = s['atm_account_name'] || '';
+
+    // Credit card note
+    document.getElementById('set-credit-note').value = s['credit_card_note'] || '';
+
+    // Refresh all badges
+    Object.keys(toggleMap).forEach(id => {
+      const cb = document.getElementById(id);
+      const badge = document.getElementById(badgeMap[id]);
+      if (cb && badge) {
+        badge.textContent = cb.checked ? '啟用中' : '已關閉';
+        badge.className = cb.checked ? 'badge-on' : 'badge-off';
+      }
+    });
+  } catch (err) {
+    showToast('載入設定失敗', 'error');
+  }
+}
+
+document.getElementById('settings-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btn-save-settings');
+  btn.textContent = '儲存中...';
+  btn.disabled = true;
+
+  const settings = {};
+
+  // Toggles
+  Object.entries(toggleMap).forEach(([elId, key]) => {
+    settings[key] = document.getElementById(elId).checked ? 'on' : 'off';
+  });
+
+  // ATM details
+  settings['atm_bank_code'] = document.getElementById('set-atm-bank-code').value.trim();
+  settings['atm_bank_name'] = document.getElementById('set-atm-bank-name').value.trim();
+  settings['atm_account'] = document.getElementById('set-atm-account').value.trim();
+  settings['atm_account_name'] = document.getElementById('set-atm-account-name').value.trim();
+
+  // Credit card note
+  settings['credit_card_note'] = document.getElementById('set-credit-note').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/prices', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-password': adminPassword
+      },
+      body: JSON.stringify({ settings })
+    });
+
+    if (!res.ok) throw new Error('儲存失敗');
+    showToast('交易設定已儲存！', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.textContent = '儲存交易設定';
     btn.disabled = false;
   }
 });

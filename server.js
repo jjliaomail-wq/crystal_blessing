@@ -618,6 +618,11 @@ app.get('/api/payment-info', async (req, res) => {
     atm_account: s['atm_account'] || '',
     atm_account_name: s['atm_account_name'] || '',
     credit_card_note: s['credit_card_note'] || '',
+    pay_credit_card: s['pay_credit_card'] || 'on',
+    pay_cod: s['pay_cod'] || 'on',
+    pay_atm: s['pay_atm'] || 'on',
+    ship_cvs: s['ship_cvs'] || 'on',
+    ship_home: s['ship_home'] || 'on'
   });
 });
 
