@@ -433,14 +433,31 @@ const Cart = (() => {
     // Payment method info logic
     const paySelect = document.getElementById('co-payment');
     const payInfo = document.getElementById('payment-info-box');
-    function updatePayInfo() {
+    let paymentData = null;
+
+    async function loadPaymentInfo() {
+      try {
+        const res = await fetch('/api/payment-info');
+        paymentData = await res.json();
+      } catch (e) {
+        paymentData = {};
+      }
+    }
+
+    async function updatePayInfo() {
+      if (!paymentData) await loadPaymentInfo();
       const val = paySelect.value;
       if (val === 'ATM 轉帳') {
         payInfo.style.display = 'block';
-        payInfo.innerHTML = '<strong style="color:var(--gold-light);">🏦 匯款帳號資訊</strong><br>銀行代碼：808 (玉山銀行)<br>帳號：1234-567-890123<br>戶名：靈晶祝福商行<br><br>請於下單後 3 日內完成匯款，以免訂單取消。';
+        const bankCode = paymentData.atm_bank_code || '（尚未設定）';
+        const bankName = paymentData.atm_bank_name || '';
+        const account = paymentData.atm_account || '（尚未設定）';
+        const accountName = paymentData.atm_account_name || '';
+        payInfo.innerHTML = `<strong style="color:var(--gold-light);">🏦 匯款帳號資訊</strong><br>銀行代碼：${bankCode}${bankName ? ' (' + bankName + ')' : ''}<br>帳號：${account}<br>${accountName ? '戶名：' + accountName + '<br>' : ''}<br>請於下單後 3 日內完成匯款，以免訂單取消。`;
       } else if (val === '信用卡') {
         payInfo.style.display = 'block';
-        payInfo.innerHTML = '<strong style="color:var(--gold-light);">💳 信用卡線上付款</strong><br>目前金流服務（如綠界科技/藍新）尚未正式開通，送出訂單後客服將會與您聯繫完成付款手續。';
+        const note = paymentData.credit_card_note || '目前金流服務（如綠界科技/藍新）尚未正式開通，送出訂單後客服將會與您聯繫完成付款手續。';
+        payInfo.innerHTML = `<strong style="color:var(--gold-light);">💳 信用卡線上付款</strong><br>${note}`;
       } else {
         payInfo.style.display = 'none';
       }

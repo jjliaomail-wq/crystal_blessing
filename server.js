@@ -468,6 +468,159 @@ app.get('/api/debug', async (req, res) => {
   });
 });
 
+// ── Admin middleware ─────────────────────────────────────────────────────────
+function checkAdminPw(req) {
+  const pw = req.headers['x-admin-password'] || req.query.pw || '';
+  return pw === (process.env.ADMIN_PASSWORD || 'admin123');
+}
+
+// ── API: Admin - 讀取全部祈願紀錄 ──────────────────────────────────────────
+app.get('/api/admin/readings', async (req, res) => {
+  if (!checkAdminPw(req)) return res.status(401).json({ error: '密碼錯誤' });
+
+  try {
+    const sheets = await getSheetsClient();
+    if (!sheets) return res.json([]);
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'Orders!A:Q'
+    });
+    const rows = response.data.values || [];
+
+    // Skip header row
+    const records = rows.slice(1).map((r, idx) => ({
+      id: idx + 1,
+      order_id: r[0] || '',
+      created_at: r[1] || '',
+      name: r[2] || '',
+      gender: r[3] || '',
+      birthdate: r[4] || '',
+      birthtime: r[5] || '',
+      religion: r[6] || '',
+      demand: r[7] || '',
+      wrist_size: r[8] || '',
+      crystal_picks: r[9] || '',
+      email: r[10] || '',
+      phone: r[11] || '',
+      shipping_method: r[12] || '',
+      payment_method: r[13] || '',
+      address: r[14] || '',
+      order_details: r[15] || '',
+      ai_result: r[16] || ''
+    }));
+
+    res.json(records);
+  } catch (err) {
+    console.error('[Admin] Error fetching readings:', err.message);
+    res.status(500).json({ error: '讀取失敗' });
+  }
+});
+
+// ── API: Admin - 更新價格設定 ──────────────────────────────────────────────
+app.post('/api/admin/prices', async (req, res) => {
+  if (!checkAdminPw(req)) return res.status(401).json({ error: '密碼錯誤' });
+
+  const { prices, names, settings } = req.body;
+  try {
+    const sheets = await getSheetsClient();
+    if (!sheets) return res.status(500).json({ error: 'Sheets 未連接' });
+
+    // Update Prices sheet
+    if (prices && names) {
+      const priceRows = [['水晶代號', '水晶名稱', '單價']];
+      for (const [id, price] of Object.entries(prices)) {
+        priceRows.push([id, names[id] || id, parseInt(price) || 0]);
+      }
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: 'Prices!A1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: priceRows }
+      });
+    }
+
+    // Update Settings sheet
+    if (settings) {
+      const settingsRows = [['設定項', '值']];
+      for (const [key, value] of Object.entries(settings)) {
+        settingsRows.push([key, value]);
+      }
+      // Preserve existing settings not in this update
+      const existingRes = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: 'Settings!A:B'
+      }).catch(() => ({ data: { values: [] } }));
+      
+      const existingSettings = {};
+      if (existingRes.data && existingRes.data.values) {
+        existingRes.data.values.forEach(row => {
+          if (row[0] && row[0] !== '設定項') existingSettings[row[0]] = row[1];
+        });
+      }
+      // Merge
+      const merged = { ...existingSettings, ...settings };
+      const mergedRows = [['設定項', '值']];
+      for (const [key, value] of Object.entries(merged)) {
+        mergedRows.push([key, value]);
+      }
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: 'Settings!A1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: mergedRows }
+      });
+    }
+
+    // Invalidate cache
+    storeCacheTime = 0;
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Admin] Error updating prices:', err.message);
+    res.status(500).json({ error: '儲存失敗: ' + err.message });
+  }
+});
+
+// ── API: Admin - 匯出 Excel (CSV) ─────────────────────────────────────────
+app.get('/api/admin/export/excel', async (req, res) => {
+  if (!checkAdminPw(req)) return res.status(401).json({ error: '密碼錯誤' });
+
+  try {
+    const sheets = await getSheetsClient();
+    if (!sheets) return res.status(500).send('Sheets 未連接');
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: 'Orders!A:Q'
+    });
+    const rows = response.data.values || [];
+
+    // Generate CSV with BOM for Excel
+    const BOM = '\uFEFF';
+    const csv = rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="crystal_blessing_orders_${Date.now()}.csv"`);
+    res.send(BOM + csv);
+  } catch (err) {
+    console.error('[Admin] Export error:', err.message);
+    res.status(500).send('匯出失敗');
+  }
+});
+
+// ── API: 付款方式資訊 (從 Settings 讀取) ──────────────────────────────────────
+app.get('/api/payment-info', async (req, res) => {
+  const data = await getStoreData();
+  const s = data.settings || {};
+  res.json({
+    atm_bank_code: s['atm_bank_code'] || '',
+    atm_bank_name: s['atm_bank_name'] || '',
+    atm_account: s['atm_account'] || '',
+    atm_account_name: s['atm_account_name'] || '',
+    credit_card_note: s['credit_card_note'] || '',
+  });
+});
+
 // ── SPA fallback ──────────────────────────────────────────────────────────────
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
